@@ -80,7 +80,7 @@
     </style>
   </head>
   <body>
-    <div class="flex flex-col justify-stretch h-full w-full my-6 md:mb-0 gap-6">
+    <div class="flex flex-col h-full w-full my-6 md:mb-0 gap-6">
       <form
         id="add_teacher_form"
         action="{{ url_for('auth.add_teacher') }}"
@@ -241,6 +241,19 @@
           if (password !== confirmPassword) {
             alert("Passwords do not match!");
             return;
+          }
+          // Şifre kurallarına uygunluğunu kontrol et
+          if (!isPasswordValid(password)) {
+            modalMessage.textContent =
+              "Your password must be 8-16 characters, include at least one lowercase letter, one uppercase letter, one number, and one special character.";
+            modalMessage.className = "message-error";
+            modal.style.display = "block";
+            return;
+          }
+          function isPasswordValid(password) {
+            var passwordRegex =
+              /^(?=.\d)(?=.[a-z])(?=.[A-Z])(?=.[!@#$%^&()_+}{":;'?\/>.,])[0-9a-zA-Z!@#$%^&()_+}{":;'?\/>.,]{8,16}$/;
+            return passwordRegex.test(password);
           }
 
           fetch(form.action, {

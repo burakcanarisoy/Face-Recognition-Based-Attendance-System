@@ -10,10 +10,10 @@
     />
   </head>
   <body class="bg-gray-100 flex flex-col h-screen">
-    <div class="flex flex-col justify-center items-center mt-6">
+    <div class="flex flex-col justify-center items-center mt-6" style="margin-left: 440px;">
       <form
         id="filter_form"
-        action="{{ url_for('views.filter_attendances') }}"
+        action="{{ url_for('views.filter_attendancesADMIN') }}"
         method="POST"
         class="w-full max-w-md"
       >
@@ -43,7 +43,7 @@
             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
-        <div class="flex items-center justify-between">
+        <div class="flex justify-center items-center justify-between">
           <button
             type="submit"
             class="button-bg hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"

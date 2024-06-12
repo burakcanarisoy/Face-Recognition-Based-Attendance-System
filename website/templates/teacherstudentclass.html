@@ -3,132 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher/Class/Student List</title>
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    /* İhtiyaç duyulursa CSS stilleri eklenebilir */
-  </style>
+  <title>Teacher Student Class</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 </head>
 <body>
-  <div class="flex flex-col justify-center items-center mt-10">
-    <h1 class="text-2xl font-bold mb-4">Teachers</h1>
-    <select id="teacherSelect" class="p-2 border border-gray-300 rounded mb-4">
-      <!-- Öğretmenlerin seçeneklerini dinamik olarak buraya ekleyeceğiz -->
-    </select>
+  <div class="container">
+    <h1>Teacher/Student/Class List</h1>
 
-    <div id="coursesContainer" class="hidden">
-      <h2 class="text-lg font-bold mb-2">Courses</h2>
-      <div id="courseList"></div>
+    <div class="form-group">
+      <label for="teacherSelect">Select Teacher</label>
+      <select class="form-control" id="teacherSelect">
+        <option value="">Select a teacher</option>
+      </select>
     </div>
 
-    <div id="studentsContainer" class="hidden">
-      <h2 class="text-lg font-bold mb-2">Students</h2>
-      <ul id="studentList"></ul>
+    <div class="form-group">
+      <label for="courseSelect">Select Course</label>
+      <select class="form-control" id="courseSelect">
+        <option value="">Select a course</option>
+      </select>
     </div>
+
+    <table class="table table-bordered" id="studentsTable">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Student Name</th>
+          <th>Student Surname</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('fetchTeacherClassStudentList').addEventListener('click', function() {
-            fetchTeachers();
+    $(document).ready(function() {
+      // Fetch teachers on page load
+      $.getJSON('/fetch_teachers', function(data) {
+        $.each(data.teachers, function(index, teacher) {
+          $('#teacherSelect').append($('<option>', {
+            value: teacher.teacher_id,
+            text: teacher.teacher_name + ' ' + teacher.teacher_surname
+          }));
         });
-    });
-    
-    function fetchTeachers() {
-        fetch('/fetch_teachers')
-        .then(response => response.json())
-        .then(data => {
-            displayTeachers(data.teachers);
-        })
-        .catch(error => {
-            console.error('Error fetching teachers:', error);
-        });
-    }
-    
-    function displayTeachers(teachers) {
-        var teacherSelect = document.getElementById('teacherSelect');
-        teacherSelect.innerHTML = '';
-    
-        teachers.forEach(teacher => {
-            var option = document.createElement('option');
-            option.textContent = teacher.teacher_name + ' ' + teacher.teacher_surname;
-            option.value = teacher.teacher_id;
-            teacherSelect.appendChild(option);
-        });
-        
-        teacherSelect.addEventListener('change', function() {
-            var selectedTeacherId = this.value;
-            if(selectedTeacherId !== '') {
-                fetchCoursesByTeacher(selectedTeacherId);
+      });
+
+      // Fetch courses when a teacher is selected
+      $('#teacherSelect').change(function() {
+        const teacherId = $(this).val();
+        $('#courseSelect').empty().append($('<option>', {
+          value: '',
+          text: 'Select a course'
+        }));
+        if (teacherId) {
+          $.ajax({
+            url: '/fetch_courses_by_teacher',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ teacher_id: teacherId }),
+            success: function(data) {
+              $.each(data.courses, function(index, course) {
+                $('#courseSelect').append($('<option>', {
+                  value: course.course_id,
+                  text: course.course_name
+                }));
+              });
             }
-        });
-    }
-    
-    function fetchCoursesByTeacher(teacherId) {
-        fetch('/fetch_courses_by_teacher', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({teacher_id: teacherId})
-        })
-        .then(response => response.json())
-        .then(data => {
-            displayCourses(data.courses);
-        })
-        .catch(error => {
-            console.error('Error fetching courses by teacher:', error);
-        });
-    }
-    
-    function displayCourses(courses) {
-        var courseListElement = document.getElementById('courseList');
-        courseListElement.innerHTML = '';
-    
-        courses.forEach(course => {
-            var listItem = document.createElement('li');
-            listItem.textContent = course.course_name;
-            courseListElement.appendChild(listItem);
-    
-            listItem.addEventListener('click', function() {
-                fetchStudentsByCourse(course.course_id);
-            });
-        });
+          });
+        }
+      });
 
-        document.getElementById('coursesContainer').classList.remove('hidden');
-    }
-    
-    function fetchStudentsByCourse(courseId) {
-        fetch('/fetch_students_by_course', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({course_id: courseId})
-        })
-        .then(response => response.json())
-        .then(data => {
-            displayStudents(data.students);
-        })
-        .catch(error => {
-            console.error('Error fetching students by course:', error);
-        });
-    }
-    
-    function displayStudents(students) {
-        var studentListElement = document.getElementById('studentList');
-        studentListElement.innerHTML = '';
-    
-        students.forEach(student => {
-            var listItem = document.createElement('li');
-            listItem.textContent = student.student_name + ' ' + student.student_surname;
-            studentListElement.appendChild(listItem);
-        });
-
-        document.getElementById('studentsContainer').classList.remove('hidden');
-    }
-</script>
-
+      // Fetch students when a course is selected
+      $('#courseSelect').change(function() {
+        const courseId = $(this).val();
+        if (courseId) {
+          $.ajax({
+            url: '/fetch_students_by_course',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ course_id: courseId }),
+            success: function(data) {
+              const tbody = $('#studentsTable tbody');
+              tbody.empty();
+              $.each(data.students, function(index, student) {
+                tbody.append(`<tr>
+                  <td>${student.student_id}</td>
+                  <td>${student.student_name}</td>
+                  <td>${student.student_surname}</td>
+                </tr>`);
+              });
+            }
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>

@@ -311,6 +311,55 @@ def fetch_students_by_course():
     conn.close()
     return jsonify({'students': students})
 
+@auth.route('/enroll_student', methods=['POST'])
+def enroll_student():
+    try:
+        student_id = request.form['student_id']
+        course_id = request.form['course_id']
+        
+        # Boş alan kontrolü
+        if not student_id or not course_id:
+            return jsonify({'success': False, 'message': 'All fields are required!'})
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Öğrencinin var olup olmadığını kontrol et
+        cursor.execute("SELECT * FROM students WHERE student_id=%s", (student_id,))
+        existing_student = cursor.fetchone()
+
+        if not existing_student:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': 'Student does not exist!'})
+
+        # Kursun var olup olmadığını kontrol et
+        cursor.execute("SELECT * FROM courses WHERE course_id=%s", (course_id,))
+        existing_course = cursor.fetchone()
+
+        if not existing_course:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': 'Course does not exist!'})
+
+        # Yeni kayıt için en yüksek registered_id'yi al ve bir artır
+        cursor.execute("SELECT MAX(registered_id) as max_id FROM registeredstudents")
+        max_id_result = cursor.fetchone()
+        new_registered_id = (max_id_result['max_id'] or 0) + 1
+
+        # Öğrenciyi course'a kaydet
+        cursor.execute("INSERT INTO registeredstudents (registered_id, student_id, course_id) VALUES (%s, %s, %s)", 
+                       (new_registered_id, student_id, course_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'message': 'Student successfully enrolled in course!'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
+
 @auth.route('/logout')
 def logout():
     session.clear()
