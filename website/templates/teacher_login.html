@@ -104,11 +104,15 @@
                 {% endfor %}
                 </tbody>
             </table>
+        {% else %}
+            <div id="default-image-container" class="flex items-center justify-center h-full">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" class="mx-auto w-96" />
+            </div>
         {% endif %}
     </div>
 </div>
 <footer class="custom-background text-white text-right p-1">
-    <div class="container mx-auto">classcheckauthorize@gmail.com</div>
+    <div class="container mx-auto">classcheckauthor@gmail.com</div>
 </footer>
 <script>
     function toggleAttendance(student_id) {
