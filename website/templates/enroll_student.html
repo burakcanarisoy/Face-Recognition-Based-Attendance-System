@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Enroll Student in Class</title>
+    <title>Enroll Student in Course</title>
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
@@ -37,8 +37,6 @@
         border: 1px solid #888;
         width: 30%;
         border-radius: 20px;
-        padding: 20px;
-        text-align: center;
       }
       .close {
         color: #aaa;
@@ -46,8 +44,8 @@
         font-size: 28px;
         font-weight: bold;
         position: relative;
-        top: -10px;
-        right: -10px;
+        top: -2px;
+        right: 5px;
       }
       .close:hover,
       .close:focus {
@@ -61,7 +59,6 @@
         border-color: #c3e6cb;
         padding: 10px;
         border-radius: 5px;
-        margin-bottom: 15px;
       }
       .message-error {
         color: red;
@@ -69,7 +66,6 @@
         border-color: #f5c6cb;
         padding: 10px;
         border-radius: 5px;
-        margin-bottom: 15px;
       }
     </style>
   </head>
@@ -101,9 +97,40 @@
         <button
           type="button"
           class="w-full p-2 mt-4 text-white button-bg rounded"
-          onclick="submitForm()"
+          onclick="submitEnrollForm()"
         >
           Enroll Student
+        </button>
+      </form>
+
+      <form
+        id="unenroll_student_form"
+        action="{{ url_for('auth.unenroll_student') }}"
+        method="POST"
+        class="mt-4"
+      >
+        <label for="student_id" class="block mb-2">Student ID:</label>
+        <input
+          type="text"
+          id="student_id"
+          name="student_id"
+          class="w-full p-2 border border-gray-300 rounded mb-2 input-field"
+        />
+
+        <label for="course_id" class="block mb-2">Course ID:</label>
+        <input
+          type="text"
+          id="course_id"
+          name="course_id"
+          class="w-full p-2 border border-gray-300 rounded mb-4 input-field"
+        />
+
+        <button
+          type="button"
+          class="w-full p-2 mt-4 text-white bg-red-600 rounded"
+          onclick="submitUnenrollForm()"
+        >
+          Delete Student
         </button>
       </form>
 
@@ -115,43 +142,61 @@
       </div>
     </div>
     <script>
-      function submitForm() {
-        const form = document.getElementById('enroll_student_form');
+      function submitEnrollForm() {
+        const form = document.getElementById("enroll_student_form");
         const formData = new FormData(form);
-        const actionUrl = form.getAttribute('action'); // Formun action değerini al
+        const actionUrl = form.getAttribute("action"); // Formun action değerini al
 
         fetch(actionUrl, {
-          method: 'POST',
+          method: "POST",
           body: formData,
         })
-          .then(response => response.json())
-          .then(data => {
+          .then((response) => response.json())
+          .then((data) => {
             showModal(data.message, data.success);
           })
-          .catch(error => {
-            showModal('An error occurred: ' + error, false);
+          .catch((error) => {
+            showModal("An error occurred: " + error, false);
+          });
+      }
+
+      function submitUnenrollForm() {
+        const form = document.getElementById("unenroll_student_form");
+        const formData = new FormData(form);
+        const actionUrl = form.getAttribute("action"); // Formun action değerini al
+
+        fetch(actionUrl, {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            showModal(data.message, data.success);
+          })
+          .catch((error) => {
+            showModal("An error occurred: " + error, false);
           });
       }
 
       function showModal(message, success) {
-        const modal = document.getElementById('myModal');
-        const modalMessage = document.getElementById('modal-message');
+        const modal = document.getElementById("myModal");
+        const modalMessage = document.getElementById("modal-message");
         modalMessage.textContent = message;
-        modalMessage.className = success ? 'message-success' : 'message-error';
-        modal.style.display = 'block';
+        modalMessage.className = success ? "message-success" : "message-error";
+        modal.style.display = "block";
       }
 
       function closeModal() {
-        const modal = document.getElementById('myModal');
-        modal.style.display = 'none';
+        const modal = document.getElementById("myModal");
+        modal.style.display = "none";
       }
 
-      window.onclick = function(event) {
-        const modal = document.getElementById('myModal');
+      window.onclick = function (event) {
+        const modal = document.getElementById("myModal");
         if (event.target == modal) {
-          modal.style.display = 'none';
+          modal.style.display = "none";
         }
-      }
+      };
     </script>
   </body>
 </html>

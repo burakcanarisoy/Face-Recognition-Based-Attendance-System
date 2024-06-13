@@ -72,11 +72,13 @@
       }
       .toggle-password {
         position: absolute;
-        top: 50%;
+        top: 22px;
         right: 10px;
         transform: translateY(-50%);
         cursor: pointer;
-      }
+        width: 24px;
+        height: 24px;
+      } 
     </style>
   </head>
   <body>
@@ -118,7 +120,7 @@
           id="email"
           name="email"
           class="w-full p-2 border border-gray-300 rounded mb-4 input-field"
-          placeholder="name@aydin.edu.tr"
+          placeholder="someone@example.com"
         />
 
         <label for="password" class="block mb-2">Password:</label>
@@ -132,7 +134,7 @@
           />
           <span class="toggle-password" onclick="togglePassword()">
             <img
-              src="{{ url_for('static', filename='images/show_password.png') }}"
+              src="{{ url_for('static', filename='images/hide_password.png') }}"
               alt="Show Password"
               id="toggle-password-icon"
             />
@@ -142,7 +144,7 @@
         <label for="confirm_password" class="block mb-2"
           >Confirm Password:</label
         >
-        <div class="password-container">
+        <div class="password-container relative">
           <input
             type="password"
             id="confirm_password"
@@ -150,11 +152,12 @@
             class="w-full p-2 border border-gray-300 rounded mb-4 input-field"
             placeholder="••••••••"
           />
-          <span class="toggle-password" onclick="toggleConfirmPassword()">
+          <span class="toggle-password" onclick="toggleConfirmPassword()" >
             <img
-              src="{{ url_for('static', filename='images/show_password.png') }}"
+              src="{{ url_for('static', filename='images/hide_password.png') }}"
               alt="Show Password"
               id="toggle-confirm-password-icon"
+              
             />
           </span>
         </div>
@@ -203,11 +206,11 @@
         if (passwordField.type === "password") {
           passwordField.type = "text";
           passwordToggle.src =
-            "{{ url_for('static', filename='images/hide_password.png') }}";
+            "{{ url_for('static', filename='images/show_password.png') }}";
         } else {
           passwordField.type = "password";
           passwordToggle.src =
-            "{{ url_for('static', filename='images/show_password.png') }}";
+            "{{ url_for('static', filename='images/hide_password.png') }}";
         }
       }
 
@@ -219,30 +222,58 @@
         if (confirmPasswordField.type === "password") {
           confirmPasswordField.type = "text";
           confirmPasswordToggle.src =
-            "{{ url_for('static', filename='images/hide_password.png') }}";
+            "{{ url_for('static', filename='images/show_password.png') }}";
         } else {
           confirmPasswordField.type = "password";
           confirmPasswordToggle.src =
-            "{{ url_for('static', filename='images/show_password.png') }}";
+            "{{ url_for('static', filename='images/hide_password.png') }}";
         }
       }
 
       document
         .getElementById("add_teacher_form")
         .addEventListener("submit", function (event) {
-          event.preventDefault(); // Sayfanın yeniden yüklenmesini engelle
+          event.preventDefault(); // Prevent page reload
           var form = event.target;
           var formData = new FormData(form);
 
-          // Şifre ve şifre doğrulama kontrolü
+          // Define modal elements
+          var modal = document.getElementById("myModal");
+          var modalMessage = document.getElementById("modal-message");
+
+          // Check for empty fields
+          var teacher_id = document.getElementById("teacher_id").value;
+          var teacher_name = document.getElementById("teacher_name").value;
+          var teacher_surname =
+            document.getElementById("teacher_surname").value;
+          var email = document.getElementById("email").value;
           var password = document.getElementById("password").value;
           var confirmPassword =
             document.getElementById("confirm_password").value;
-          if (password !== confirmPassword) {
-            alert("Passwords do not match!");
+
+          if (
+            !teacher_id ||
+            !teacher_name ||
+            !teacher_surname ||
+            !email ||
+            !password ||
+            !confirmPassword
+          ) {
+            modalMessage.textContent = "All fields are required!";
+            modalMessage.className = "message-error";
+            modal.style.display = "block";
             return;
           }
-          // Şifre kurallarına uygunluğunu kontrol et
+
+          // Password validation
+          if (password !== confirmPassword) {
+            modalMessage.textContent = "Passwords do not match!";
+            modalMessage.className = "message-error";
+            modal.style.display = "block";
+            return;
+          }
+
+          // Password complexity check
           if (!isPasswordValid(password)) {
             modalMessage.textContent =
               "Your password must be 8-16 characters, include at least one lowercase letter, one uppercase letter, one number, and one special character.";
@@ -250,9 +281,10 @@
             modal.style.display = "block";
             return;
           }
+
           function isPasswordValid(password) {
             var passwordRegex =
-              /^(?=.\d)(?=.[a-z])(?=.[A-Z])(?=.[!@#$%^&()_+}{":;'?\/>.,])[0-9a-zA-Z!@#$%^&()_+}{":;'?\/>.,]{8,16}$/;
+              /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&()_+}{":;'?/>,.])[0-9a-zA-Z!@#$%^&()_+}{":;'?/>,.]{8,16}$/;
             return passwordRegex.test(password);
           }
 
@@ -262,8 +294,6 @@
           })
             .then((response) => response.json())
             .then((data) => {
-              var modal = document.getElementById("myModal");
-              var modalMessage = document.getElementById("modal-message");
               if (data.success) {
                 modalMessage.textContent = data.message;
                 modalMessage.className = "message-success";
@@ -275,9 +305,8 @@
             })
             .catch((error) => {
               console.error("Error:", error);
-              var modal = document.getElementById("myModal");
-              var modalMessage = document.getElementById("modal-message");
               modalMessage.textContent = "An unexpected error occurred.";
+              modalMessage.className = "message-error";
               modal.style.display = "block";
             });
         });
@@ -285,9 +314,12 @@
       document
         .getElementById("remove_teacher_form")
         .addEventListener("submit", function (event) {
-          event.preventDefault(); // Sayfanın yeniden yüklenmesini engelle
+          event.preventDefault(); // Prevent page reload
           var form = event.target;
           var formData = new FormData(form);
+
+          var modal = document.getElementById("myModal");
+          var modalMessage = document.getElementById("modal-message");
 
           fetch(form.action, {
             method: "POST",
@@ -295,8 +327,6 @@
           })
             .then((response) => response.json())
             .then((data) => {
-              var modal = document.getElementById("myModal");
-              var modalMessage = document.getElementById("modal-message");
               if (data.success) {
                 modalMessage.textContent = data.message;
                 modalMessage.className = "message-success";
@@ -308,9 +338,8 @@
             })
             .catch((error) => {
               console.error("Error:", error);
-              var modal = document.getElementById("myModal");
-              var modalMessage = document.getElementById("modal-message");
               modalMessage.textContent = "An unexpected error occurred.";
+              modalMessage.className = "message-error";
               modal.style.display = "block";
             });
         });

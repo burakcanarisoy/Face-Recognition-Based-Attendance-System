@@ -132,7 +132,6 @@ def filter_attendances():
     conn.close()
 
     return render_template('teacher_login.html', courses=courses, students=students, selected_date=selected_date, selected_course_id=selected_course_id)
-
 @views.route('/add_teacher')
 def add_teacher():
     return render_template('add_teacher.html')
@@ -149,9 +148,9 @@ def add_student():
         student_surname = request.form['student_surname']
         images = request.files.getlist('images')
 
-        # Ensure the user uploads exactly 20 images
+        # Ensure the user uploads exactly 5 images
         if len(images) != 5:
-            return jsonify({"success": False, "message": "Please upload exactly 20 images."})
+            return jsonify({"success": False, "message": "Please upload exactly 5 images."})
 
         # Save images to a temporary directory
         image_dir = os.path.join("static", "uploads", student_id)
@@ -228,8 +227,8 @@ def fetch_students_by_course():
     cursor.execute("""
         SELECT s.student_id, s.student_name, s.student_surname
         FROM students s
-        JOIN attendance a ON s.student_id = a.student_id
-        WHERE a.course_id = %s
+        JOIN registeredstudents rs ON s.student_id = rs.student_id
+        WHERE rs.course_id = %s
     """, (course_id,))
     students = cursor.fetchall()
     cursor.close()

@@ -342,6 +342,15 @@ def enroll_student():
             conn.close()
             return jsonify({'success': False, 'message': 'Course does not exist!'})
 
+        # Öğrencinin zaten kursa kayıtlı olup olmadığını kontrol et
+        cursor.execute("SELECT * FROM registeredstudents WHERE student_id=%s AND course_id=%s", (student_id, course_id))
+        existing_registration = cursor.fetchone()
+
+        if existing_registration:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': 'Student already registered for this course.'})
+
         # Yeni kayıt için en yüksek registered_id'yi al ve bir artır
         cursor.execute("SELECT MAX(registered_id) as max_id FROM registeredstudents")
         max_id_result = cursor.fetchone()
@@ -359,6 +368,36 @@ def enroll_student():
         return jsonify({'success': False, 'message': str(e)})
 
 
+@auth.route('/unenroll_student', methods=['POST'])
+def unenroll_student():
+    try:
+        student_id = request.form['student_id']
+        course_id = request.form['course_id']
+
+        if not student_id or not course_id:
+            return jsonify({'success': False, 'message': 'Student ID and Course ID are required!'})
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Check if the student is enrolled in the course
+        cursor.execute("SELECT * FROM registeredstudents WHERE student_id=%s AND course_id=%s", (student_id, course_id))
+        existing_registration = cursor.fetchone()
+
+        if not existing_registration:
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': 'Registration does not exist!'})
+
+        # Unenroll the student from the course
+        cursor.execute("DELETE FROM registeredstudents WHERE student_id=%s AND course_id=%s", (student_id, course_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'message': 'Student successfully unenrolled from course!'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 @auth.route('/logout')
 def logout():
